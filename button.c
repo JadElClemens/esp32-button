@@ -20,6 +20,15 @@ typedef struct {
 	uint64_t down_time;
 } debounce_t;
 
+#ifdef CONFIG_BUTTON_CORE_ONE
+    #define CORENUM 1
+#elseif CONFIG_BUTTON_CORE_TWO
+    #define CORENUM 2
+#else
+    #define CORENUM tskNO_AFFINITY
+#endif
+
+
 int pin_count = -1;
 debounce_t* debounce;
 
@@ -54,9 +63,6 @@ static bool button_up(debounce_t* d) {
 	return button_fell(d);
 }
 
-#define LONG_PRESS_DURATION (2000)
-#define LONG_PRESS_REPEAT (50)
-
 static uint32_t millis() {
 	return esp_timer_get_time() / 1000;
 }
@@ -71,12 +77,14 @@ static void button_task(void* pvParameter)
 	while (1) {
 		for (int idx=0; idx<pin_count; idx++) {
 			update_button(&debounce[idx]);
-			if (debounce[idx].down_time && (millis() - debounce[idx].down_time > LONG_PRESS_DURATION)) {
+			if (debounce[idx].down_time && (millis() - debounce[idx].down_time > CONFIG_LONG_PRESS_DURATION)) {
 				debounce[idx].down_time = 0;
 				ESP_LOGI(TAG, "%d LONG", debounce[idx].pin);
+				int i = 0;
 				while (!button_up(&debounce[idx])) {
-					send_event(debounce[idx], EVT_BUTTON_DOWN);
-					vTaskDelay(LONG_PRESS_REPEAT/portTICK_PERIOD_MS);
+					if(!i++) send_event(debounce[idx], EVT_BUTTON_DOWN);
+					if(i>=CONFIG_LONG_PRESS_REPEAT/10) i=0;
+					vTaskDelay(10/portTICK_PERIOD_MS);
 					update_button(&debounce[idx]);
 				}
 				ESP_LOGI(TAG, "%d UP", debounce[idx].pin);
@@ -133,5 +141,5 @@ void button_init(unsigned long long pin_select) {
 	}
 
 	// Spawn a task to monitor the pins
-	xTaskCreate(&button_task, "button_task", 4096, NULL, 10, NULL);
+	xTaskCreatePinnedToCore(&button_task, "button_task", CONFIG_BUTTON_TASK_STACK_SIZE, NULL, CONFIG_BUTTON_TASK_PRIORITY, NULL, CORENUM);
 }

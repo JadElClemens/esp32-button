@@ -13,6 +13,7 @@ This fork introduces the following changes:
 - A [CMakeLists.txt](./CMakeLists.txt) file for compatibility with the new Python/CMake-based ESP-IDF build system
 - Added __cplusplus preprocessor check for inclusion in C++ projects
 - Posts to the ESP-IDF Default Event Loop instead of a FreeRTOS queue.
+- Adds KConfig options for long press duration/repeat time, core affinity, task stack size, and priority
 
 ## Available input GPIO pins
 

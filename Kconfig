@@ -1,0 +1,45 @@
+menu "Button Debouncer"
+
+	 config LONG_PRESS_DURATION
+	 		int "Long Press Duration"
+			default 2000
+			help
+				The time in ms buttons must be held down before they are considered held.
+
+	config LONG_PRESS_REPEAT
+		   int "Long Press Repeat Time"
+		   default 1000
+		   help
+				How often in ms an EVT_BUTTON_DOWN will be sent during a long press (after LONG_PRESS_DURATION).
+
+	menu "Button Task"
+
+		config BUTTON_TASK_PRIORITY
+				int "Button Task Priority"
+				range 0 24
+				default 10
+				help
+					The priority of the button read task.
+
+		config BUTTON_TASK_STACK_SIZE
+				int "Button Task Stack Size"
+				default 4096
+				help
+					The button read task's stack size in bytes
+
+		choice
+			prompt "Core"
+			default BUTTON_CORE_NONE
+			help
+				The core on which button debouncing tasks will run.
+	
+			config BUTTON_CORE_NONE
+				   bool "None"
+			config BUTTON_CORE_ONE
+				   bool "1"
+			config BUTTON_CORE_TWO
+				   bool "2"
+		endchoice
+	endmenu
+	
+endmenu
